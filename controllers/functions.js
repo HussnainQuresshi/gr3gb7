@@ -180,7 +180,7 @@ module.exports = {
   addDomain: tryCatch(async (req, res, next) => {
     console.log('REQ ==== ', req.body);
     const result = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 100; i++) {
       const NewDoamin = new Domain({
         domain: 'fiver.biz',
         metrics: {
