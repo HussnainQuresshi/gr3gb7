@@ -11,7 +11,6 @@ app.use('/api', require('./routes/index'));
 
 app.use(express.static(path.join(__dirname, 'Frontend/build')));
 app.get('*', function (req, res) {
-  console.log('m here');
   res.sendFile(path.join(__dirname, 'Frontend/build', 'index.html'));
 });
 const port = process.env.PORT || 5000;

@@ -3,7 +3,19 @@ const Domain = require('../models/domain');
 
 module.exports = {
   getDomains: tryCatch(async (req, res, next) => {
-    let { domain, metrics, words, score, keyword, is_favourite } = req.body;
+    let {
+      domain,
+      length,
+      alphanumeric,
+      numeric,
+      hyphenated,
+      tld,
+      wordcount,
+      words,
+      score,
+      keyword,
+      is_favourite,
+    } = req.body;
     let Exp = (arg) => {
       return new RegExp(arg, 'i');
     };
@@ -20,7 +32,19 @@ module.exports = {
     if (
       pageNo < 0 ||
       pageNo === 0 ||
-      !(domain || metrics || words || score || keyword || is_favourite)
+      !(
+        domain ||
+        length ||
+        alphanumeric ||
+        numeric ||
+        hyphenated ||
+        tld ||
+        wordcount ||
+        words ||
+        score ||
+        keyword ||
+        is_favourite
+      )
     ) {
       response = {
         error: true,
@@ -69,26 +93,23 @@ module.exports = {
                 ],
               }
             : {},
-          check(score) ? { sentiment_score: parseInt(score) } : {},
+          score || score == '0' ? { sentiment_score: parseInt(score) } : {},
           words ? { words: Exp(words) } : {},
-          metrics
-            ? {
-                $or: [
-                  check(metrics)
-                    ? {
-                        $or: [
-                          { 'metrics.length': parseInt(metrics) },
-                          { 'metrics.alphanumeric': parseInt(metrics) },
-                          { 'metrics.numeric': parseInt(metrics) },
-                          { 'metrics.hyphenated': parseInt(metrics) },
-                          { 'metrics.wordcount': parseInt(metrics) },
-                        ],
-                      }
-                    : { 'metrics.tld': Exp(metrics) },
-                ],
-              }
-            : {},
           domain ? { domain: Exp(domain) } : {},
+          length || length == '0' ? { 'metrics.length': parseInt(length) } : {},
+          alphanumeric || alphanumeric == '0'
+            ? { 'metrics.alphanumeric': parseInt(alphanumeric) }
+            : {},
+          numeric || numeric == '0'
+            ? { 'metrics.numeric': parseInt(numeric) }
+            : {},
+          hyphenated || hyphenated == '0'
+            ? { 'metrics.hyphenated': parseInt(hyphenated) }
+            : {},
+          tld ? { 'metrics.tld': Exp(tld) } : {},
+          wordcount || wordcount == '0'
+            ? { 'metrics.wordcount': parseInt(wordcount) }
+            : {},
         ],
       },
       (err, totalCount) => {
@@ -134,26 +155,25 @@ module.exports = {
                     ],
                   }
                 : {},
-              check(score) ? { sentiment_score: parseInt(score) } : {},
+              score || score == '0' ? { sentiment_score: parseInt(score) } : {},
               words ? { words: Exp(words) } : {},
-              metrics
-                ? {
-                    $or: [
-                      check(metrics)
-                        ? {
-                            $or: [
-                              { 'metrics.length': parseInt(metrics) },
-                              { 'metrics.alphanumeric': parseInt(metrics) },
-                              { 'metrics.numeric': parseInt(metrics) },
-                              { 'metrics.hyphenated': parseInt(metrics) },
-                              { 'metrics.wordcount': parseInt(metrics) },
-                            ],
-                          }
-                        : { 'metrics.tld': Exp(metrics) },
-                    ],
-                  }
-                : {},
               domain ? { domain: Exp(domain) } : {},
+              length || length == '0'
+                ? { 'metrics.length': parseInt(length) }
+                : {},
+              alphanumeric || alphanumeric == '0'
+                ? { 'metrics.alphanumeric': parseInt(alphanumeric) }
+                : {},
+              numeric || numeric == '0'
+                ? { 'metrics.numeric': parseInt(numeric) }
+                : {},
+              hyphenated || hyphenated == '0'
+                ? { 'metrics.hyphenated': parseInt(hyphenated) }
+                : {},
+              tld ? { 'metrics.tld': Exp(tld) } : {},
+              wordcount || wordcount == '0'
+                ? { 'metrics.wordcount': parseInt(wordcount) }
+                : {},
             ],
           },
           {},
@@ -178,21 +198,20 @@ module.exports = {
   }),
 
   addDomain: tryCatch(async (req, res, next) => {
-    console.log('REQ ==== ', req.body);
     const result = [];
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 10; i++) {
       const NewDoamin = new Domain({
-        domain: 'fiver.biz',
+        domain: 'pnu.biz',
         metrics: {
           length: 3,
           alphanumeric: 0,
           numeric: 0,
           hyphenated: 0,
-          tld: '.wofff',
+          tld: '.biz',
           wordcount: 2,
         },
-        words: ['p', 'nu', 'hello', 'complicated'],
-        sentiment_score: 999,
+        words: ['p', 'nu'],
+        sentiment_score: 0,
       });
       const temp = await NewDoamin.save();
       result.push(temp);
