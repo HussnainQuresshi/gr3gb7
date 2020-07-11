@@ -4,6 +4,9 @@ const Domain = require('../models/domain');
 module.exports = {
   getDomains: tryCatch(async (req, res, next) => {
     let {
+      countselect,
+      scoreselect,
+      lengthselect,
       domain,
       length,
       alphanumeric,
@@ -13,9 +16,22 @@ module.exports = {
       wordcount,
       words,
       score,
-      keyword,
       is_favourite,
     } = req.body;
+    const FindRelation = (op, val) => {
+      switch (op) {
+        case '0':
+          return { $eq: val };
+        case '1':
+          return { $gt: val };
+        case '2':
+          return { $lt: val };
+        case '3':
+          return { $gte: val };
+        case '4':
+          return { $lte: val };
+      }
+    };
     let Exp = (arg) => {
       return new RegExp(arg, 'i');
     };
@@ -28,7 +44,7 @@ module.exports = {
     };
     let pageNo = parseInt(req.body.pageNo);
     let size = parseInt(req.body.size);
-    let query = { xyz: 'sss' };
+    let query = {};
     if (
       pageNo < 0 ||
       pageNo === 0 ||
@@ -42,7 +58,6 @@ module.exports = {
         wordcount ||
         words ||
         score ||
-        keyword ||
         is_favourite
       )
     ) {
@@ -54,49 +69,18 @@ module.exports = {
     }
     query.skip = size * (pageNo - 1);
     query.limit = size;
-    Domain.count(
+    Domain.countDocuments(
       {
         $and: [
           is_favourite ? { is_favourite: true } : {},
-          keyword
-            ? {
-                $or: [
-                  { words: Exp(keyword) },
-
-                  { domain: Exp(keyword) },
-
-                  { 'metrics.tld': Exp(keyword) },
-
-                  check(keyword)
-                    ? { sentiment_score: parseInt(keyword) }
-                    : { xyz: 'sss' },
-
-                  check(keyword)
-                    ? { 'metrics.length': parseInt(keyword) }
-                    : { xyz: 'sss' },
-
-                  check(keyword)
-                    ? { 'metrics.alphanumeric': parseInt(keyword) }
-                    : { xyz: 'sss' },
-
-                  check(keyword)
-                    ? { 'metrics.numeric': parseInt(keyword) }
-                    : { xyz: 'sss' },
-
-                  check(keyword)
-                    ? { 'metrics.hyphenated': parseInt(keyword) }
-                    : { xyz: 'sss' },
-
-                  check(keyword)
-                    ? { 'metrics.wordcount': parseInt(keyword) }
-                    : { xyz: 'sss' },
-                ],
-              }
+          score || score == '0'
+            ? { sentiment_score: FindRelation(scoreselect, parseInt(score)) }
             : {},
-          score || score == '0' ? { sentiment_score: parseInt(score) } : {},
           words ? { words: Exp(words) } : {},
           domain ? { domain: Exp(domain) } : {},
-          length || length == '0' ? { 'metrics.length': parseInt(length) } : {},
+          length || length == '0'
+            ? { 'metrics.length': FindRelation(lengthselect, parseInt(length)) }
+            : {},
           alphanumeric || alphanumeric == '0'
             ? { 'metrics.alphanumeric': parseInt(alphanumeric) }
             : {},
@@ -108,7 +92,12 @@ module.exports = {
             : {},
           tld ? { 'metrics.tld': Exp(tld) } : {},
           wordcount || wordcount == '0'
-            ? { 'metrics.wordcount': parseInt(wordcount) }
+            ? {
+                'metrics.wordcount': FindRelation(
+                  countselect,
+                  parseInt(wordcount)
+                ),
+              }
             : {},
         ],
       },
@@ -120,41 +109,6 @@ module.exports = {
           {
             $and: [
               is_favourite ? { is_favourite: true } : {},
-              keyword
-                ? {
-                    $or: [
-                      { words: Exp(keyword) },
-
-                      { domain: Exp(keyword) },
-
-                      { 'metrics.tld': Exp(keyword) },
-
-                      check(keyword)
-                        ? { sentiment_score: parseInt(keyword) }
-                        : { xyz: 'sss' },
-
-                      check(keyword)
-                        ? { 'metrics.length': parseInt(keyword) }
-                        : { xyz: 'sss' },
-
-                      check(keyword)
-                        ? { 'metrics.alphanumeric': parseInt(keyword) }
-                        : { xyz: 'sss' },
-
-                      check(keyword)
-                        ? { 'metrics.numeric': parseInt(keyword) }
-                        : { xyz: 'sss' },
-
-                      check(keyword)
-                        ? { 'metrics.hyphenated': parseInt(keyword) }
-                        : { xyz: 'sss' },
-
-                      check(keyword)
-                        ? { 'metrics.wordcount': parseInt(keyword) }
-                        : { xyz: 'sss' },
-                    ],
-                  }
-                : {},
               score || score == '0' ? { sentiment_score: parseInt(score) } : {},
               words ? { words: Exp(words) } : {},
               domain ? { domain: Exp(domain) } : {},
@@ -198,8 +152,7 @@ module.exports = {
   }),
 
   addDomain: tryCatch(async (req, res, next) => {
-    const result = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 1000; i++) {
       const NewDoamin = new Domain({
         domain: 'pnu.biz',
         metrics: {
@@ -213,10 +166,9 @@ module.exports = {
         words: ['p', 'nu'],
         sentiment_score: 0,
       });
-      const temp = await NewDoamin.save();
-      result.push(temp);
+      await NewDoamin.save();
     }
-    return res.status(200).json({ message: `Domain added`, result });
+    return res.status(200).json({ message: `Domain added` });
   }),
 
   deleteFavourite: tryCatch(async (req, res, next) => {
